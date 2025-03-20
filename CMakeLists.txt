@@ -26,13 +26,3 @@ endif()
 # Target for package generation
 add_custom_target(dist COMMAND ${CMAKE_MAKE_PROGRAM} package_source)
 
-# Ensure lwipdocs is defined before adding it as a dependency
-if (DOXYGEN_FOUND)
-    add_custom_target(lwipdocs
-        COMMAND ${CMAKE_COMMAND} -E remove_directory ${DOXYGEN_DIR}/output/html
-        COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
-        WORKING_DIRECTORY ${DOXYGEN_DIR}
-        COMMENT "Generating API documentation with Doxygen"
-        VERBATIM)
-    add_dependencies(dist lwipdocs)
-endif()
