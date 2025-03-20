@@ -1,23 +1,11 @@
 cmake_minimum_required(VERSION 3.10)
 
-set (CMAKE_CONFIGURATION_TYPES "Debug;Release")
-
 project(lwIP)
 
-# Example lwIP application
 set(LWIP_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+include(src/Filelists.cmake)
 
-set (LWIP_DEFINITIONS LWIP_DEBUG=1)
-
-if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
-  add_subdirectory(${LWIP_DIR}/contrib/ports/win32/example_app)
-elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Linux" OR ${CMAKE_SYSTEM_NAME} STREQUAL "Darwin" OR ${CMAKE_SYSTEM_NAME} STREQUAL "FreeBSD")
-  add_subdirectory(${LWIP_DIR}/contrib/ports/unix/example_app)
-else()
-  message(WARNING "Host ${CMAKE_SYSTEM_NAME} is not supported to build example_app")
-endif()
-
-# Source package generation
+# Package generation
 set(CPACK_SOURCE_GENERATOR "ZIP")
 set(CPACK_SOURCE_PACKAGE_DESCRIPTION_SUMMARY "lwIP lightweight IP stack")
 set(CPACK_PACKAGE_VERSION_MAJOR "${LWIP_VERSION_MAJOR}")
@@ -27,11 +15,24 @@ set(CPACK_SOURCE_IGNORE_FILES "/build/;${CPACK_SOURCE_IGNORE_FILES};.git")
 set(CPACK_SOURCE_PACKAGE_FILE_NAME "lwip-${LWIP_VERSION_MAJOR}.${LWIP_VERSION_MINOR}.${LWIP_VERSION_REVISION}")
 include(CPack)
 
-# Generate docs before creating source package
-include(src/Filelists.cmake)
-if (NOT TARGET dist)
-  add_custom_target(dist COMMAND ${CMAKE_MAKE_PROGRAM} package_source)
-  if (TARGET lwipdocs)
+# Doxygen configuration
+find_package(Doxygen)
+if (DOXYGEN_FOUND)
+    message(STATUS "Doxygen found, generating documentation.")
+else()
+    message(WARNING "Doxygen not found, documentation will not be generated.")
+endif()
+
+# Target for package generation
+add_custom_target(dist COMMAND ${CMAKE_MAKE_PROGRAM} package_source)
+
+# Ensure lwipdocs is defined before adding it as a dependency
+if (DOXYGEN_FOUND)
+    add_custom_target(lwipdocs
+        COMMAND ${CMAKE_COMMAND} -E remove_directory ${DOXYGEN_DIR}/output/html
+        COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
+        WORKING_DIRECTORY ${DOXYGEN_DIR}
+        COMMENT "Generating API documentation with Doxygen"
+        VERBATIM)
     add_dependencies(dist lwipdocs)
-  endif()
 endif()
