@@ -26,3 +26,4 @@ endif()
 # Target for package generation
 add_custom_target(dist COMMAND ${CMAKE_MAKE_PROGRAM} package_source)
 
+add_custom_target(all_lwip ALL DEPENDS lwipcore lwipallapps)
